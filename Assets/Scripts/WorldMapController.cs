@@ -25,7 +25,7 @@ public class WorldMapController : MonoBehaviour
     {
         //Decide if a scenario will occur
         willScenarioOccur = Random.Range(0f, 1f);
-        if (willScenarioOccur >= 0.25f)
+        if (willScenarioOccur >= 0.75f)
         {
             //Decide if there will be an event scenario or combat scenario
             float isEventScenario = Random.Range(0f, 1f);

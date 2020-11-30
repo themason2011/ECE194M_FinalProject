@@ -44,8 +44,11 @@ public class PlayerMovement : MonoBehaviour
         Vector2 mousePosition = worldMapInput.Mouse.MousePosition.ReadValue<Vector2>();
         mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
         Vector3Int gridPosition = map.WorldToCell(mousePosition);
-        //Check if there is a tile where player is clicking and if the tile you want to move to is adjacent to player's current tile
-        if (map.GetComponentInChildren<Tilemap>().HasTile(gridPosition) && Vector2.Distance(map.GetCellCenterWorld(gridPosition),transform.position) <= 0.85f)
+        float moveDistance = Vector2.Distance(map.GetCellCenterWorld(gridPosition), transform.position);
+        //Check if there is a tile where player is clicking and if the tile you want to move to is adjacent to player's current tile.
+        //moveDistance having a small range of exclusion is to account for the tiles on the top and bottom, which are slightly closer to the player
+        //Than the tiles to the left and right (distances are 0.975 and 1.0, respectively)
+        if (map.GetComponentInChildren<Tilemap>().HasTile(gridPosition) && moveDistance <= 1.0f && !(moveDistance > 0.97f && moveDistance < 0.98f))
         {
             destination = map.GetCellCenterWorld(gridPosition);
             transform.position = destination;
