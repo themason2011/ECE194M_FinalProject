@@ -97,8 +97,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e41a2e45769f27849b800f84012edb0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  map: {fileID: 8196158581193836276, guid: 0aa630ece879b254a8ee5eae63849f76, type: 3}
-  tilemap: {fileID: 0}
+  fogOfWar: {fileID: 4668534307832886852, guid: bdd9d9547714d744099574f4a41dc07c, type: 3}
+  visionDistance: 1
 --- !u!50 &6172102491853455616
 Rigidbody2D:
   serializedVersion: 4

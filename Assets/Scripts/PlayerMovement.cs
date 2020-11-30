@@ -6,11 +6,14 @@ using UnityEngine.Tilemaps;
 public class PlayerMovement : MonoBehaviour
 {
     WorldMapInput worldMapInput;
+    
+    private int visionDistance;
 
     private Grid map;
 
     private GameObject worldMapController;
     private GameObject gameController;
+    private Tilemap fogOfWar;
 
     private Vector3 destination;
 
@@ -35,6 +38,9 @@ public class PlayerMovement : MonoBehaviour
         destination = transform.position;
         worldMapController = GameObject.Find("WorldMapController");
         gameController = GameObject.Find("GameController");
+        fogOfWar = GameObject.Find("Fog").GetComponent<Tilemap>();
+        visionDistance = 2;
+        UpdateFogOfWar();
         map = GameObject.Find("Grid").GetComponent<Grid>();
         worldMapInput.Mouse.MouseClick.performed += _ => MouseClick();
     }
@@ -52,8 +58,25 @@ public class PlayerMovement : MonoBehaviour
         {
             destination = map.GetCellCenterWorld(gridPosition);
             transform.position = destination;
+            UpdateFogOfWar();
             gameController.GetComponent<GameController>().worldMapPosition = transform.position;
             worldMapController.GetComponent<WorldMapController>().RollScenario();
         }
+    }
+
+    void UpdateFogOfWar()
+    {
+        Vector3Int currentPlayerTile = fogOfWar.WorldToCell(transform.position);
+
+        //Clear the surrounding tiles
+        for (int x = -visionDistance; x <= visionDistance; x++)
+        {
+            for (int y = -visionDistance; y <= visionDistance; y++)
+            {
+                fogOfWar.SetTile(currentPlayerTile + new Vector3Int(x, y, 0), null);
+            }
+
+        }
+
     }
 }
