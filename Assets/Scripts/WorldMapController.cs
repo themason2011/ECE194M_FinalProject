@@ -5,20 +5,34 @@ using UnityEngine.SceneManagement;
 
 public class WorldMapController : MonoBehaviour
 {
-    public GameObject playerPrefab;
-
     private float willScenarioOccur;
     private int chooseScenario;
     private bool isEvent;
-    private GameObject gameController;
+    private GameObject gameInfo;
+    private Grid map;
 
+    private static WorldMapController worldMapControllerInstance;
+
+    private void Awake()
+    {
+        //Prevent multiple copies of WorldMapController from showing up when reloading the WorldMap Scene
+        if (worldMapControllerInstance == null)
+        {
+            worldMapControllerInstance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
     void Start()
     {
-        gameController = GameObject.Find("GameController");
+        DontDestroyOnLoad(this.gameObject);
+        gameInfo = GameObject.Find("GameInfo");
+        map = GameObject.Find("Grid").GetComponent<Grid>();
+        gameInfo.GetComponent<GameInfo>().grid = map;
         chooseScenario = 0;
         isEvent = false;
-        Vector3 playerStartPosition = gameController.GetComponent<GameController>().worldMapPosition;
-        Instantiate(playerPrefab, playerStartPosition, Quaternion.identity);
     }
 
     public void RollScenario()
@@ -42,16 +56,23 @@ public class WorldMapController : MonoBehaviour
                 //This is the number of combat scenarios because a combat scenario was chosen
                 chooseScenario = Random.Range(0, 3);
             }
-            gameController.GetComponent<GameController>().scenarioNumber = chooseScenario;
+            gameInfo.GetComponent<GameInfo>().scenarioNumber = chooseScenario;
             if(isEvent)
             {
+                map.enabled = false;
                 SceneManager.LoadScene("EventScreen");
             }
             else
             {
+                map.enabled = false;
                 SceneManager.LoadScene("CombatScreen");
             }
         }
+    }
+
+    public void EnableWorldMap()
+    {
+        map.enabled = true;
     }
 
     // Update is called once per frame

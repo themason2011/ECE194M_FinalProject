@@ -5,32 +5,31 @@ using UnityEngine.SceneManagement;
 
 public class EventController : MonoBehaviour
 {
-    private GameObject gameController;
+    private GameInfo gameInfo;
     private GameObject playerController;
 
     void Start()
     {
-        gameController = GameObject.Find("GameController");
+        gameInfo = GameObject.Find("GameInfo").GetComponent<GameInfo>();
         playerController = GameObject.Find("PlayerController");
 
-        LoadEvent(gameController.GetComponent<GameController>().scenarioNumber);
+        LoadEvent(gameInfo.scenarioNumber);
     }
 
     private void LoadEvent(int eventNumber)
     {
         //Load EventInfo based on eventNumber
         //Events will change when more are added, they get added here.
-        GameController gameControllerComponent = gameController.GetComponent<GameController>();
 
         //Events are text-based choices (might remove this feature if time does not allow. Focus more on combat first)
         //Load event variables
         switch (eventNumber)
         {
             case 0:
-                gameControllerComponent.eventInfo = new EventInfo();
+                gameInfo.eventInfo = new EventInfo();
                 break;
             case 1:
-                gameControllerComponent.eventInfo = new EventInfo();
+                gameInfo.eventInfo = new EventInfo();
                 break;
         }
     }
