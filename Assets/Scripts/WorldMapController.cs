@@ -54,7 +54,7 @@ public class WorldMapController : MonoBehaviour
             {
                 isEvent = false;
                 //This is the number of combat scenarios because a combat scenario was chosen
-                chooseScenario = Random.Range(0, 3);
+                chooseScenario = Random.Range(0, 2);
             }
             gameInfo.GetComponent<GameInfo>().scenarioNumber = chooseScenario;
             if(isEvent)
