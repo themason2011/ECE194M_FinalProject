@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class WorldMapController : MonoBehaviour
 {
     private float willScenarioOccur;
     private int chooseScenario;
     private bool isEvent;
-    private GameObject gameInfo;
+    private GameInfo gameInfo;
+    private GameObject player;
     private Grid map;
 
     private static WorldMapController worldMapControllerInstance;
@@ -28,11 +30,25 @@ public class WorldMapController : MonoBehaviour
     void Start()
     {
         DontDestroyOnLoad(this.gameObject);
-        gameInfo = GameObject.Find("GameInfo");
+        gameInfo = GameObject.Find("GameInfo").GetComponent<GameInfo>();
+        player = GameObject.Find("Player");
         map = GameObject.Find("Grid").GetComponent<Grid>();
-        gameInfo.GetComponent<GameInfo>().grid = map;
+        gameInfo.grid = map;
         chooseScenario = 0;
         isEvent = false;
+    }
+
+    public void WinGame()
+    {
+        Text goldenCityText = GameObject.Find("GoldenCityText").GetComponent<Text>();
+        goldenCityText.enabled = true;
+        StartCoroutine(WinGameTimer());
+    }
+
+    IEnumerator WinGameTimer()
+    {
+        yield return new WaitForSeconds(2f);
+        Application.Quit();
     }
 
     public void RollScenario()
@@ -73,11 +89,5 @@ public class WorldMapController : MonoBehaviour
     public void EnableWorldMap()
     {
         map.enabled = true;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

@@ -41,6 +41,9 @@ public class CombatController : MonoBehaviour
         //Reset stamina to max at start of match
         gameInfo.playerInfo.stamina = gameInfo.playerInfo.maxStamina;
 
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
         LoadEvent(gameInfo.scenarioNumber);
     }
 
@@ -138,6 +141,8 @@ public class CombatController : MonoBehaviour
                         //Player ran away from combat!
                         else
                         {
+                            Cursor.visible = true;
+                            Cursor.lockState = CursorLockMode.None;
                             GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
                             SceneManager.LoadScene("WorldMap");
                         }
@@ -158,6 +163,8 @@ public class CombatController : MonoBehaviour
                         //If the Combat Over Text was Displayed and player hits enter again, go back to World Map
                         if (combatOverTextDisplayed)
                         {
+                            Cursor.visible = true;
+                            Cursor.lockState = CursorLockMode.None;
                             GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
                             SceneManager.LoadScene("WorldMap");
                         }
