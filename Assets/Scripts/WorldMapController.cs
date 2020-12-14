@@ -27,6 +27,7 @@ public class WorldMapController : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
     void Start()
     {
         DontDestroyOnLoad(this.gameObject);

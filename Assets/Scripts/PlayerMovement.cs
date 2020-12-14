@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
-{   
+{
+    public Text playerHealthText;
+
     private int visionDistance;
 
     private Grid map;
@@ -34,26 +37,15 @@ public class PlayerMovement : MonoBehaviour
 
         //Set position for player on load
         transform.position = gameInfo.GetComponent<GameInfo>().worldMapPosition;
-    }
-
-    void UpdateFogOfWar()
-    {
-        Vector3Int currentPlayerTile = fogOfWar.WorldToCell(transform.position);
-
-        //Clear the surrounding tiles
-        for (int x = -visionDistance; x <= visionDistance; x++)
-        {
-            for (int y = -visionDistance; y <= visionDistance; y++)
-            {
-                fogOfWar.SetTile(currentPlayerTile + new Vector3Int(x, y, 0), null);
-            }
-
-        }
+        Camera.main.transform.position = new Vector3(transform.position.x + 0.25f, transform.position.y + 0.5f, -10);
     }
 
     void Update()
     {
-        if(Input.GetMouseButtonDown(0) && !movementDisabled)
+        UpdateUI();
+        UpdateCameraPosition();
+
+        if (Input.GetMouseButtonDown(0) && !movementDisabled)
         {
             Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3Int gridPosition = map.WorldToCell(mousePosition);
@@ -68,6 +60,9 @@ public class PlayerMovement : MonoBehaviour
                 UpdateFogOfWar();
                 gameInfo.GetComponent<GameInfo>().worldMapPosition = transform.position;
 
+                int playerHealth = gameInfo.GetComponent<GameInfo>().playerInfo.health;
+                gameInfo.GetComponent<GameInfo>().playerInfo.health = playerHealth + 10 > 100 ? 100 : playerHealth + 10;
+
                 if (goldenCity.HasTile(gridPosition))
                 {
                     //You win!
@@ -80,6 +75,31 @@ public class PlayerMovement : MonoBehaviour
                     worldMapController.GetComponent<WorldMapController>().RollScenario();
                 }
             }
+        }
+    }
+
+    private void UpdateUI()
+    {
+        playerHealthText.text = gameInfo.GetComponent<GameInfo>().playerInfo.health.ToString();
+    }
+
+    private void UpdateCameraPosition()
+    {
+        Camera.main.transform.position = new Vector3(transform.position.x + 0.25f, transform.position.y + 0.5f, -10);
+    }
+
+    void UpdateFogOfWar()
+    {
+        Vector3Int currentPlayerTile = fogOfWar.WorldToCell(transform.position);
+
+        //Clear the surrounding tiles
+        for (int x = -visionDistance; x <= visionDistance; x++)
+        {
+            for (int y = -visionDistance; y <= visionDistance; y++)
+            {
+                fogOfWar.SetTile(currentPlayerTile + new Vector3Int(x, y, 0), null);
+            }
+
         }
     }
 }
