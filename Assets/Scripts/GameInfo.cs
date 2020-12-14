@@ -8,7 +8,6 @@ public class GameInfo : MonoBehaviour
     public int scenarioNumber;
     public Vector3 worldMapPosition;
     public Grid grid;
-    public EventInfo eventInfo;
     public CombatInfo combatInfo;
     public PlayerInfo playerInfo;
 
@@ -32,7 +31,6 @@ public class GameInfo : MonoBehaviour
 
         scenarioNumber = 0;
         worldMapPosition = new Vector3(-3.5f, -0.4875f, 0f);
-        eventInfo = new EventInfo();
         combatInfo = new CombatInfo();
         playerInfo = new PlayerInfo();
     }
@@ -40,6 +38,9 @@ public class GameInfo : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
     }
 }

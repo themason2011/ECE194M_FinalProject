@@ -16,9 +16,11 @@ public class CombatController : MonoBehaviour
     public GameObject mainSelection;
     public GameObject attackSelection;
     public GameObject specialSelection;
+    public GameObject healAndRunSelection;
 
     public GameObject attackButton;
     public GameObject specialButton;
+    public GameObject healAndRunButton;
     public GameObject runAwayButton;
     public GameObject lightAttackButton;
     public GameObject heavyAttackButton;
@@ -31,8 +33,9 @@ public class CombatController : MonoBehaviour
     private bool combatOver = false;
     private bool playerWon = false;
     private bool combatOverTextDisplayed = false;
-    private bool failedHealOrRunAway = false;
+    private bool actionNotPossible = false;
     private bool runAway = false;
+    private bool skipTurn = false;
 
     void Awake()
     {
@@ -40,9 +43,6 @@ public class CombatController : MonoBehaviour
 
         //Reset stamina to max at start of match
         gameInfo.playerInfo.stamina = gameInfo.playerInfo.maxStamina;
-
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
 
         LoadEvent(gameInfo.scenarioNumber);
     }
@@ -53,7 +53,7 @@ public class CombatController : MonoBehaviour
         //Run combat in here
         //Update Health and Stamina values from playerInfo
         UpdateUI();
-        //Go Back if in Attack or Special Selection and player presses Escape
+        //Go Back if in Attack or Special Selection and player presses Backspace
         CheckBackButtonSelect();
         //Checks if combat has been won or lost
         CheckCombatOver();
@@ -85,13 +85,13 @@ public class CombatController : MonoBehaviour
 
     private void CheckBackButtonSelect()
     {
-        //If you are in the Attack or Special Selection menu and hit escape, go back to the mainSelection menu
-        if(Input.GetKeyDown(KeyCode.Escape) && !descriptionText.activeSelf && !mainSelection.activeSelf)
+        //If you are in the Attack or Special Selection menu and hit backspace, go back to the mainSelection menu
+        if(Input.GetKeyDown(KeyCode.Backspace) && !descriptionText.activeSelf && !mainSelection.activeSelf)
         {
             //Enable Main Selection
             mainSelection.SetActive(true);
 
-            //Disable either Attack or Special Selection and Select appropriate Selection in Main Selection
+            //Disable Attack, Special, or Heal/Run Selection and Select appropriate Selection in Main Selection
             if (attackSelection.activeSelf)
             {
                 attackSelection.SetActive(false);
@@ -101,6 +101,11 @@ public class CombatController : MonoBehaviour
             {
                 specialSelection.SetActive(false);
                 specialButton.GetComponent<Button>().Select();
+            }
+            else if(healAndRunSelection.activeSelf)
+            {
+                healAndRunSelection.SetActive(false);
+                healAndRunButton.GetComponent<Button>().Select();
             }
         }
     }
@@ -127,22 +132,29 @@ public class CombatController : MonoBehaviour
 
                             attackButton.GetComponent<Button>().Select();
 
-                            if(!failedHealOrRunAway)
+                            if(!actionNotPossible)
                             {
                                 //Regen Stamina if this is the start of player's turn
-                                RegenStamina();
+                                if (skipTurn)
+                                {
+                                    skipTurn = false;
+                                    //TODO: Decide if I want to remove passive stamina regen when you skip a turn to regen stamina
+                                    RegenStamina(10);
+                                }
+                                else
+                                {
+                                    RegenStamina(10);
+                                }
                             }
                             else
                             {
                                 //Don't regen stamina, just reset flag for healing or running away failure
-                                failedHealOrRunAway = false;
+                                actionNotPossible = false;
                             }
                         }
                         //Player ran away from combat!
                         else
                         {
-                            Cursor.visible = true;
-                            Cursor.lockState = CursorLockMode.None;
                             GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
                             SceneManager.LoadScene("WorldMap");
                         }
@@ -163,8 +175,6 @@ public class CombatController : MonoBehaviour
                         //If the Combat Over Text was Displayed and player hits enter again, go back to World Map
                         if (combatOverTextDisplayed)
                         {
-                            Cursor.visible = true;
-                            Cursor.lockState = CursorLockMode.None;
                             GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
                             SceneManager.LoadScene("WorldMap");
                         }
@@ -181,8 +191,11 @@ public class CombatController : MonoBehaviour
                         //If the Combat Over Text was Displayed and player hits enter again, quit the application. Game over
                         if (combatOverTextDisplayed)
                         {
-                            //TODO: Make this go to title screen instead of quit application
-                            Application.Quit();
+                            //Destroy info for this game because player lost and return to title screen
+                            Destroy(gameInfo.gameObject);
+                            GameObject worldMapController = GameObject.Find("WorldMapController");
+                            Destroy(worldMapController);
+                            SceneManager.LoadScene("TitleScreen");
                         }
                         //Display Combat Over Text for when Player Loses Combat
                         else
@@ -210,14 +223,14 @@ public class CombatController : MonoBehaviour
         }
     }
 
-    private void RegenStamina()
+    private void RegenStamina(int staminaRegen)
     {
         //Add some stamina regen formula every round, possibly based on Dex?
         int stamina = gameInfo.playerInfo.stamina;
         int maxStamina = gameInfo.playerInfo.maxStamina;
 
         //Make sure stamina doesn't go over maxStamina
-        gameInfo.playerInfo.stamina = stamina + 10 > maxStamina ? maxStamina : stamina + 10;
+        gameInfo.playerInfo.stamina = stamina + staminaRegen > maxStamina ? maxStamina : stamina + staminaRegen;
     }
 
     private void StartEnemyAction()
@@ -249,17 +262,30 @@ public class CombatController : MonoBehaviour
         //Do Light Attack Action
         int enemyHealth = gameInfo.combatInfo.enemyHealth;
         int stamina = gameInfo.playerInfo.stamina;
-        gameInfo.combatInfo.enemyHealth = enemyHealth - 20 < 0 ? 0 : enemyHealth - 20;
-        gameInfo.playerInfo.stamina = stamina - 20 < 0 ? 0 : stamina - 20;
+        int staminaUsed = 10;
+        int damageDealt = 10;
 
         attackSelection.SetActive(false);
 
-        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + 20 + " Damage to the Enemy!  <sprite index=0>";
+        if (stamina < staminaUsed)
+        {
+            actionNotPossible = true;
+
+            descriptionText.GetComponent<TextMeshProUGUI>().text = "Not Enough Stamina to do a Light Attack!  <sprite index=0>";
+        }
+        else
+        {
+            gameInfo.playerInfo.stamina = stamina - staminaUsed;
+            gameInfo.combatInfo.enemyHealth = enemyHealth - damageDealt < 0 ? 0 : enemyHealth - damageDealt;
+
+            descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + damageDealt + " Damage to the Enemy!  <sprite index=0>";
+
+            playerTurn = false;
+        }
+
         descriptionText.SetActive(true);
 
         descriptionText.GetComponent<Button>().Select();
-
-        playerTurn = false;
     }
 
     public void SelectHeavyAttack()
@@ -268,17 +294,30 @@ public class CombatController : MonoBehaviour
         //Do Heavy Attack Action
         int enemyHealth = gameInfo.combatInfo.enemyHealth;
         int stamina = gameInfo.playerInfo.stamina;
-        gameInfo.combatInfo.enemyHealth = enemyHealth - 30 < 0 ? 0 : enemyHealth - 30;
-        gameInfo.playerInfo.stamina = stamina - 40 < 0 ? 0 : stamina - 40;
+        int staminaUsed = 30;
+        int damageDealt = 30;
 
         attackSelection.SetActive(false);
 
-        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + 30 + " Damage to the Enemy!  <sprite index=0>";
+        if (stamina < staminaUsed)
+        {
+            actionNotPossible = true;
+
+            descriptionText.GetComponent<TextMeshProUGUI>().text = "Not Enough Stamina to do a Heavy Attack!  <sprite index=0>";
+        }
+        else
+        {
+            gameInfo.playerInfo.stamina = stamina - staminaUsed;
+            gameInfo.combatInfo.enemyHealth = enemyHealth - damageDealt < 0 ? 0 : enemyHealth - damageDealt;
+
+            descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + damageDealt + " Damage to the Enemy!  <sprite index=0>";
+
+            playerTurn = false;
+        }
+
         descriptionText.SetActive(true);
 
         descriptionText.GetComponent<Button>().Select();
-
-        playerTurn = false;
     }
 
     public void SelectSpecial()
@@ -291,42 +330,94 @@ public class CombatController : MonoBehaviour
         superPunchButton.GetComponent<Button>().Select();
     }
 
-    public void SelectDragonsBreath()
-    {
-        //Do what happens when you select the Dragon's Breath button
-        //Do Dragon's Breath Action
-        int enemyHealth = gameInfo.combatInfo.enemyHealth;
-        int stamina = gameInfo.playerInfo.stamina;
-        gameInfo.combatInfo.enemyHealth = enemyHealth - 50 < 0 ? 0 : enemyHealth - 50;
-        gameInfo.playerInfo.stamina = stamina - 50 < 0 ? 0 : stamina - 50;
-
-        specialSelection.SetActive(false);
-
-        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + 50 + " Damage to the Enemy!  <sprite index=0>";
-        descriptionText.SetActive(true);
-
-        descriptionText.GetComponent<Button>().Select();
-
-        playerTurn = false;
-    }
-
     public void SelectSuperPunch()
     {
         //Do what happens when you select the Super Punch button
         //Do Super Punch Action
         int enemyHealth = gameInfo.combatInfo.enemyHealth;
         int stamina = gameInfo.playerInfo.stamina;
-        gameInfo.combatInfo.enemyHealth = enemyHealth - 40 < 0 ? 0 : enemyHealth - 40;
-        gameInfo.playerInfo.stamina = stamina - 50 < 0 ? 0 : stamina - 50;
+        int staminaUsed = 50;
+        int damageDealt = 50;
 
         specialSelection.SetActive(false);
 
-        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + 40 + " Damage to the Enemy!  <sprite index=0>";
+        if (stamina < staminaUsed)
+        {
+            actionNotPossible = true;
+
+            descriptionText.GetComponent<TextMeshProUGUI>().text = "Not Enough Stamina to do a Super Punch!  <sprite index=0>";
+        }
+        else
+        {
+            gameInfo.playerInfo.stamina = stamina - staminaUsed;
+            gameInfo.combatInfo.enemyHealth = enemyHealth - damageDealt < 0 ? 0 : enemyHealth - damageDealt;
+
+            descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + damageDealt + " Damage to the Enemy!  <sprite index=0>";
+
+            playerTurn = false;
+        }
+
+        descriptionText.SetActive(true);
+
+        descriptionText.GetComponent<Button>().Select();
+    }
+
+    public void SelectDragonsBreath()
+    {
+        //Do what happens when you select the Dragon's Breath button
+        //Do Dragon's Breath Action
+        int enemyHealth = gameInfo.combatInfo.enemyHealth;
+        int stamina = gameInfo.playerInfo.stamina;
+        int staminaUsed = 60;
+        int damageDealt = 60;
+
+        specialSelection.SetActive(false);
+
+        if (stamina < staminaUsed)
+        {
+            actionNotPossible = true;
+
+            descriptionText.GetComponent<TextMeshProUGUI>().text = "Not Enough Stamina to do Dragon's Breath!  <sprite index=0>";
+        }
+        else
+        {
+            gameInfo.playerInfo.stamina = stamina - staminaUsed;
+            gameInfo.combatInfo.enemyHealth = enemyHealth - damageDealt < 0 ? 0 : enemyHealth - damageDealt;
+
+            descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + damageDealt + " Damage to the Enemy!  <sprite index=0>";
+
+            playerTurn = false;
+        }
+
+        descriptionText.SetActive(true);
+
+        descriptionText.GetComponent<Button>().Select();
+    }
+
+    public void SelectSkipTurn()
+    {
+        mainSelection.SetActive(false);
+
+        //Regen Stamina here. Could also allow passive Stamina regen? Not sure
+        RegenStamina(30);
+
+        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Recovered " + 30 + " Stamina!  <sprite index=0>";
         descriptionText.SetActive(true);
 
         descriptionText.GetComponent<Button>().Select();
 
+        skipTurn = true;
         playerTurn = false;
+    }
+
+    public void SelectHealAndRun()
+    {
+        //Do what happens when you select the Heal/Run button
+        //Select Heal/Run screen
+        mainSelection.SetActive(false);
+        healAndRunSelection.SetActive(true);
+
+        healButton.GetComponent<Button>().Select();
     }
 
     public void SelectHeal()
@@ -334,9 +425,9 @@ public class CombatController : MonoBehaviour
         //Select Heal
         if (gameInfo.playerInfo.stamina < 40)
         {
-            failedHealOrRunAway = true;
+            actionNotPossible = true;
 
-            mainSelection.SetActive(false);
+            healAndRunSelection.SetActive(false);
 
             descriptionText.GetComponent<TextMeshProUGUI>().text = "Not Enough Stamina to Heal!  <sprite index=0>";
             descriptionText.SetActive(true);
@@ -345,9 +436,9 @@ public class CombatController : MonoBehaviour
         }
         else if(gameInfo.playerInfo.health == gameInfo.playerInfo.maxHealth)
         {
-            failedHealOrRunAway = true;
+            actionNotPossible = true;
 
-            mainSelection.SetActive(false);
+            healAndRunSelection.SetActive(false);
 
             descriptionText.GetComponent<TextMeshProUGUI>().text = "You're Already at Full Health!  <sprite index=0>";
             descriptionText.SetActive(true);
@@ -364,7 +455,7 @@ public class CombatController : MonoBehaviour
             int healthRecovered = health + 30 > maxHealth ? maxHealth - health : 30;
             gameInfo.playerInfo.health = health + healthRecovered;
 
-            mainSelection.SetActive(false);
+            healAndRunSelection.SetActive(false);
 
             descriptionText.GetComponent<TextMeshProUGUI>().text = "You Recovered " + healthRecovered + " Health!  <sprite index=0>";
             descriptionText.SetActive(true);
@@ -380,9 +471,9 @@ public class CombatController : MonoBehaviour
         //Do what happens when you select the Run Away button
         if(gameInfo.playerInfo.stamina < 50)
         {
-            failedHealOrRunAway = true;
+            actionNotPossible = true;
 
-            mainSelection.SetActive(false);
+            healAndRunSelection.SetActive(false);
 
             descriptionText.GetComponent<TextMeshProUGUI>().text = "Not Enough Stamina to Run Away!  <sprite index=0>";
             descriptionText.SetActive(true);
@@ -397,7 +488,7 @@ public class CombatController : MonoBehaviour
             float randomEscape = Random.Range(0f, 1f);
             if(randomEscape > 0.5f)
             {
-                mainSelection.SetActive(false);
+                healAndRunSelection.SetActive(false);
 
                 descriptionText.GetComponent<TextMeshProUGUI>().text = "Got Away Safely!  <sprite index=0>";
                 descriptionText.SetActive(true);
@@ -408,9 +499,9 @@ public class CombatController : MonoBehaviour
             }
             else
             {
-                failedHealOrRunAway = true;
+                actionNotPossible = true;
 
-                mainSelection.SetActive(false);
+                healAndRunSelection.SetActive(false);
 
                 descriptionText.GetComponent<TextMeshProUGUI>().text = "Couldn't Escape!  <sprite index=0>";
                 descriptionText.SetActive(true);
