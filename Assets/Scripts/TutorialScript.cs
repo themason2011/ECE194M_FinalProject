@@ -66,7 +66,7 @@ public class TutorialScript : MonoBehaviour
                     break;
 
                 case 6:
-                    descriptionText.GetComponent<TextMeshProUGUI>().text = "Lastly, here are the controls for your character.\n\nGeneral:\nQuit Game: Escape\n\nWorld Map:\nMove Space: Left Click\n\nCombat Screen:\nChange Action: Arrow Keys (Alt: Mouse)\nSelect Action: Return (Alt: Left Click)\nGo Back: Baskpace  <sprite index=0>";
+                    descriptionText.GetComponent<TextMeshProUGUI>().text = "Lastly, here are the controls for your character.\n\nGeneral:\nQuit Game: Escape\n\nWorld Map:\nMove Space: Left Click\n\nCombat Screen:\nChange Action: Arrow Keys (Alt: Mouse)\nSelect Action: Return (Alt: Left Click)\nGo Back: Backpace  <sprite index=0>";
                     tutorialState++;
                     break;
 

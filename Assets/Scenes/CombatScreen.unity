@@ -246,8 +246,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Dragon's Breath
 --- !u!222 &76266329
@@ -363,8 +363,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Attack
 --- !u!222 &144763458
@@ -678,8 +678,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Special
 --- !u!222 &226124903
@@ -1078,12 +1078,10 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 'Skip Turn
-
-'
+  m_Text: Skip Turn
 --- !u!222 &541824012
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1405,8 +1403,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Run Away
 --- !u!222 &1035985578
@@ -1885,8 +1883,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Heal
 --- !u!222 &1482012726
@@ -2020,8 +2018,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Light Attack
 --- !u!222 &1528861031
@@ -2444,8 +2442,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Heavy Attack
 --- !u!222 &1676101977
@@ -2733,8 +2731,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Heal/Run
 --- !u!222 &1969990713
@@ -2868,8 +2866,8 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Super Punch
 --- !u!222 &2021973638
