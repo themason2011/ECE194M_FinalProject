@@ -6,11 +6,12 @@ using UnityEngine.UI;
 
 public class WorldMapController : MonoBehaviour
 {
+    public AudioSource audioSource;
+
     private float willScenarioOccur;
     private int chooseScenario;
     private bool isEvent;
     private GameInfo gameInfo;
-    private GameObject player;
     private Grid map;
 
     private static WorldMapController worldMapControllerInstance;
@@ -32,7 +33,6 @@ public class WorldMapController : MonoBehaviour
     {
         DontDestroyOnLoad(this.gameObject);
         gameInfo = GameObject.Find("GameInfo").GetComponent<GameInfo>();
-        player = GameObject.Find("Player");
         map = GameObject.Find("Grid").GetComponent<Grid>();
         gameInfo.grid = map;
         chooseScenario = 0;
@@ -43,13 +43,18 @@ public class WorldMapController : MonoBehaviour
     {
         Text goldenCityText = GameObject.Find("GoldenCityText").GetComponent<Text>();
         goldenCityText.enabled = true;
+        map.enabled = false;
+        Camera.main.GetComponent<AudioSource>().Stop();
+        audioSource.Play();
         StartCoroutine(WinGameTimer());
     }
 
     IEnumerator WinGameTimer()
     {
-        yield return new WaitForSeconds(2f);
-        Application.Quit();
+        yield return new WaitForSeconds(5f);
+        Destroy(gameInfo.gameObject);
+        Destroy(this.gameObject);
+        SceneManager.LoadScene("TitleScreen");
     }
 
     public void RollScenario()
@@ -76,12 +81,12 @@ public class WorldMapController : MonoBehaviour
             gameInfo.GetComponent<GameInfo>().scenarioNumber = chooseScenario;
             if(isEvent)
             {
-                map.enabled = false;
+                //map.enabled = false;
                 SceneManager.LoadScene("EventScreen");
             }
             else
             {
-                map.enabled = false;
+                //map.enabled = false;
                 SceneManager.LoadScene("CombatScreen");
             }
         }

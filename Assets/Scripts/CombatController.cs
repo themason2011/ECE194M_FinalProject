@@ -115,94 +115,90 @@ public class CombatController : MonoBehaviour
         //If descriptionText is currently displaying something
         if(descriptionText.activeSelf)
         {
-            //If player presses Return
-            if(Input.GetKeyDown(KeyCode.Return))
+            //If Combat is still going
+            if(!combatOver)
             {
-                //If Combat is still going
-                if(!combatOver)
+                //If play was just handed over to the player by the enemy or player did an invalid move
+                if(playerTurn)
                 {
-                    //If play was just handed over to the player by the enemy or player did an invalid move
-                    if(playerTurn)
+                    //If player did not choose run away option or tried and did not succeed in running away
+                    if(!runAway)
                     {
-                        //If player did not choose run away option or tried and did not succeed in running away
-                        if(!runAway)
+                        descriptionText.SetActive(false);
+                        mainSelection.SetActive(true);
+
+                        attackButton.GetComponent<Button>().Select();
+
+                        if(!actionNotPossible)
                         {
-                            descriptionText.SetActive(false);
-                            mainSelection.SetActive(true);
-
-                            attackButton.GetComponent<Button>().Select();
-
-                            if(!actionNotPossible)
+                            //Regen Stamina if this is the start of player's turn
+                            if (skipTurn)
                             {
-                                //Regen Stamina if this is the start of player's turn
-                                if (skipTurn)
-                                {
-                                    skipTurn = false;
-                                    //TODO: Decide if I want to remove passive stamina regen when you skip a turn to regen stamina
-                                    RegenStamina(10);
-                                }
-                                else
-                                {
-                                    RegenStamina(10);
-                                }
+                                skipTurn = false;
+                                //TODO: Decide if I want to remove passive stamina regen when you skip a turn to regen stamina
+                                RegenStamina(10);
                             }
                             else
                             {
-                                //Don't regen stamina, just reset flag for healing or running away failure
-                                actionNotPossible = false;
+                                RegenStamina(10);
                             }
                         }
-                        //Player ran away from combat!
                         else
                         {
-                            GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
-                            SceneManager.LoadScene("WorldMap");
+                            //Don't regen stamina, just reset flag for healing or running away failure
+                            actionNotPossible = false;
                         }
                     }
-                    //If play was just handed over to the enemy by the player
+                    //Player ran away from combat!
                     else
                     {
-                        descriptionText.SetActive(false);
-                        StartEnemyAction();
+                        GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
+                        SceneManager.LoadScene("WorldMap");
                     }
                 }
-                //Player either won or lost 
+                //If play was just handed over to the enemy by the player
                 else
                 {
-                    //If player won
-                    if (playerWon)
+                    descriptionText.SetActive(false);
+                    StartEnemyAction();
+                }
+            }
+            //Player either won or lost 
+            else
+            {
+                //If player won
+                if (playerWon)
+                {
+                    //If the Combat Over Text was Displayed and player hits enter again, go back to World Map
+                    if (combatOverTextDisplayed)
                     {
-                        //If the Combat Over Text was Displayed and player hits enter again, go back to World Map
-                        if (combatOverTextDisplayed)
-                        {
-                            GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
-                            SceneManager.LoadScene("WorldMap");
-                        }
-                        //Display Combat Over Text for when Player Wins Combat!
-                        else
-                        {
-                            descriptionText.GetComponent<TextMeshProUGUI>().text = "You Won the Battle!  <sprite index=0>";
-                            combatOverTextDisplayed = true;
-                        }
+                        GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
+                        SceneManager.LoadScene("WorldMap");
                     }
-                    //Player lost
+                    //Display Combat Over Text for when Player Wins Combat!
                     else
                     {
-                        //If the Combat Over Text was Displayed and player hits enter again, quit the application. Game over
-                        if (combatOverTextDisplayed)
-                        {
-                            //Destroy info for this game because player lost and return to title screen
-                            Destroy(gameInfo.gameObject);
-                            GameObject worldMapController = GameObject.Find("WorldMapController");
-                            Destroy(worldMapController);
-                            SceneManager.LoadScene("TitleScreen");
-                        }
-                        //Display Combat Over Text for when Player Loses Combat
-                        else
-                        {
-                            descriptionText.GetComponent<TextMeshProUGUI>().text = "You Died. Game Over!  <sprite index=0>";
-                            combatOverTextDisplayed = true;
-                        }
+                        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Won the Battle!  <sprite index=0>";
+                        combatOverTextDisplayed = true;
+                    }
+                }
+                //Player lost
+                else
+                {
+                    //If the Combat Over Text was Displayed and player hits enter again, quit the application. Game over
+                    if (combatOverTextDisplayed)
+                    {
+                        //Destroy info for this game because player lost and return to title screen
+                        Destroy(gameInfo.gameObject);
+                        GameObject worldMapController = GameObject.Find("WorldMapController");
+                        Destroy(worldMapController);
+                        SceneManager.LoadScene("TitleScreen");
+                    }
+                    //Display Combat Over Text for when Player Loses Combat
+                    else
+                    {
+                        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Died. Game Over!  <sprite index=0>";
+                        combatOverTextDisplayed = true;
                     }
                 }
             }

@@ -19,13 +19,13 @@ public class TutorialScript : MonoBehaviour
         tutorialEnabledContainer = GameObject.Find("TutorialEnabledContainer");
 
         //Display first set of text here
-        descriptionText.GetComponent<TextMeshProUGUI>().text = "Welcome to A Lost World!\nPress the Return Key to Continue  <sprite index=0>";
+        descriptionText.GetComponent<TextMeshProUGUI>().text = "Welcome to A Lost World!\nPress the Return Key or Left-Click to Continue  <sprite index=0>";
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Return))
+        if(Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0))
         {
             switch(tutorialState)
             {

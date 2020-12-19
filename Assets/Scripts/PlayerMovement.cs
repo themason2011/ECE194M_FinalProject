@@ -67,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
                 {
                     //You win!
                     movementDisabled = true;
+                    gameObject.GetComponent<SpriteRenderer>().enabled = false;
                     worldMapController.GetComponent<WorldMapController>().WinGame();
                 }
                 else
