@@ -9,6 +9,12 @@ public class TitleScript : MonoBehaviour
     public Toggle disableTutorial;
 
     private GameObject tutorialEnabledContainer;
+
+    private void Awake()
+    {
+        AudioListener.pause = false;
+    }
+
     // Start is called before the first frame update
     void Start()
     {

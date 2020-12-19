@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 public class GameInfo : MonoBehaviour
 {
     public int scenarioNumber;
+    public string currentTileType;
     public Vector3 worldMapPosition;
     public Grid grid;
     public CombatInfo combatInfo;
@@ -30,17 +31,9 @@ public class GameInfo : MonoBehaviour
         }
 
         scenarioNumber = 0;
+        currentTileType = "DenseForest";
         worldMapPosition = new Vector3(-3.5f, -0.4875f, 0f);
         combatInfo = new CombatInfo();
         playerInfo = new PlayerInfo();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.Escape))
-        {
-            Application.Quit();
-        }
     }
 }

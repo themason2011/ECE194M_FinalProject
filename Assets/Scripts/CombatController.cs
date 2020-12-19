@@ -11,6 +11,13 @@ public class CombatController : MonoBehaviour
     public Text playerStaminaText;
     public Text enemyHealthText;
 
+    public Sprite backgroundDesert;
+    public Sprite backgroundLightForest;
+    public Sprite backgroundDenseForest;
+
+    public Sprite alien1;
+    public Sprite alien2;
+
     public GameObject descriptionText;
 
     public GameObject mainSelection;
@@ -28,7 +35,28 @@ public class CombatController : MonoBehaviour
     public GameObject superPunchButton;
     public GameObject healButton;
 
+    public AudioSource audioSource;
+
+    public AudioClip alienAttack;
+    public AudioClip alienHit;
+    public AudioClip alienHurt;
+    public AudioClip missAttack;
+    public AudioClip playerHit;
+    public AudioClip playerHurt;
+    public AudioClip dragonsBreathHit;
+    public AudioClip superPunchSwing;
+    public AudioClip superPunchHit;
+    public AudioClip healingSound;
+    public AudioClip runAwaySound;
+    public AudioClip battleWon;
+    public AudioClip battleLost;
+    public AudioClip playerDeath;
+
     private GameInfo gameInfo;
+    private GameObject playerUI;
+    private GameObject enemyUI;
+    private GameObject backgroundImage;
+    private GameObject enemyImage;
     private bool playerTurn = true;
     private bool combatOver = false;
     private bool playerWon = false;
@@ -36,10 +64,15 @@ public class CombatController : MonoBehaviour
     private bool actionNotPossible = false;
     private bool runAway = false;
     private bool skipTurn = false;
+    private bool playerActionsLocked = false;
 
     void Awake()
     {
         gameInfo = GameObject.Find("GameInfo").GetComponent<GameInfo>();
+        playerUI = GameObject.Find("PlayerShakeContainer");
+        enemyUI = GameObject.Find("EnemyShakeContainer");
+        backgroundImage = GameObject.Find("BackgroundImage");
+        enemyImage = GameObject.Find("EnemyImage");
 
         //Reset stamina to max at start of match
         gameInfo.playerInfo.stamina = gameInfo.playerInfo.maxStamina;
@@ -68,11 +101,31 @@ public class CombatController : MonoBehaviour
         switch (eventNumber)
         {
             case 0:
-                gameInfo.combatInfo = new CombatInfo("Bandit", 100, 3, 3, 3, 100);
+                gameInfo.combatInfo = new CombatInfo("Alien1", 75, 3, 3, 3, 100);
+                enemyImage.GetComponent<Image>().sprite = alien1;
                 break;
             case 1:
-                gameInfo.combatInfo = new CombatInfo("Impostor", 200, 5, 5, 5, 150);
+                gameInfo.combatInfo = new CombatInfo("Alien2", 100, 5, 5, 5, 150);
+                enemyImage.GetComponent<Image>().sprite = alien2;
                 break;
+        }
+        SetBackgroundImage();
+    }
+
+    private void SetBackgroundImage()
+    {
+        if(gameInfo.currentTileType == "Desert")
+        {
+            backgroundImage.GetComponent<Image>().sprite = backgroundDesert;
+            backgroundImage.GetComponent<Image>().SetNativeSize();
+        }
+        else if (gameInfo.currentTileType == "LightForest")
+        {
+            backgroundImage.GetComponent<Image>().sprite = backgroundLightForest;
+        }
+        else if (gameInfo.currentTileType == "DenseForest")
+        {
+            backgroundImage.GetComponent<Image>().sprite = backgroundDenseForest;
         }
     }
 
@@ -115,90 +168,97 @@ public class CombatController : MonoBehaviour
         //If descriptionText is currently displaying something
         if(descriptionText.activeSelf)
         {
-            //If Combat is still going
-            if(!combatOver)
+            if(!playerActionsLocked)
             {
-                //If play was just handed over to the player by the enemy or player did an invalid move
-                if(playerTurn)
+                //If Combat is still going
+                if (!combatOver)
                 {
-                    //If player did not choose run away option or tried and did not succeed in running away
-                    if(!runAway)
+                    //If play was just handed over to the player by the enemy or player did an invalid move
+                    if (playerTurn)
                     {
-                        descriptionText.SetActive(false);
-                        mainSelection.SetActive(true);
-
-                        attackButton.GetComponent<Button>().Select();
-
-                        if(!actionNotPossible)
+                        //If player did not choose run away option or tried and did not succeed in running away
+                        if (!runAway)
                         {
-                            //Regen Stamina if this is the start of player's turn
-                            if (skipTurn)
+                            descriptionText.SetActive(false);
+                            mainSelection.SetActive(true);
+
+                            attackButton.GetComponent<Button>().Select();
+
+                            if (!actionNotPossible)
                             {
-                                skipTurn = false;
-                                //TODO: Decide if I want to remove passive stamina regen when you skip a turn to regen stamina
-                                RegenStamina(10);
+                                //Regen Stamina if this is the start of player's turn
+                                if (skipTurn)
+                                {
+                                    skipTurn = false;
+                                    //TODO: Decide if I want to remove passive stamina regen when you skip a turn to regen stamina
+                                    RegenStamina(10);
+                                }
+                                else
+                                {
+                                    RegenStamina(10);
+                                }
                             }
                             else
                             {
-                                RegenStamina(10);
+                                //Don't regen stamina, just reset flag for healing or running away failure
+                                actionNotPossible = false;
                             }
                         }
+                        //Player ran away from combat!
                         else
                         {
-                            //Don't regen stamina, just reset flag for healing or running away failure
-                            actionNotPossible = false;
+                            GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
+                            SceneManager.LoadScene("WorldMap");
                         }
                     }
-                    //Player ran away from combat!
+                    //If play was just handed over to the enemy by the player
                     else
                     {
-                        GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
-                        SceneManager.LoadScene("WorldMap");
+                        descriptionText.SetActive(false);
+                        StartEnemyAction();
                     }
                 }
-                //If play was just handed over to the enemy by the player
+                //Player either won or lost 
                 else
                 {
-                    descriptionText.SetActive(false);
-                    StartEnemyAction();
-                }
-            }
-            //Player either won or lost 
-            else
-            {
-                //If player won
-                if (playerWon)
-                {
-                    //If the Combat Over Text was Displayed and player hits enter again, go back to World Map
-                    if (combatOverTextDisplayed)
+                    //If player won
+                    if (playerWon)
                     {
-                        GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
-                        SceneManager.LoadScene("WorldMap");
+                        //If the Combat Over Text was Displayed and player hits enter again, go back to World Map
+                        if (combatOverTextDisplayed)
+                        {
+                            GameObject.Find("WorldMapController").GetComponent<WorldMapController>().EnableWorldMap();
+                            SceneManager.LoadScene("WorldMap");
+                        }
+                        //Display Combat Over Text for when Player Wins Combat!
+                        else
+                        {
+                            StartCoroutine(EndBattleSequence(true));
+
+                            descriptionText.GetComponent<TextMeshProUGUI>().text = "You Won the Battle!  <sprite index=0>";
+                            combatOverTextDisplayed = true;
+                        }
                     }
-                    //Display Combat Over Text for when Player Wins Combat!
+                    //Player lost
                     else
                     {
-                        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Won the Battle!  <sprite index=0>";
-                        combatOverTextDisplayed = true;
-                    }
-                }
-                //Player lost
-                else
-                {
-                    //If the Combat Over Text was Displayed and player hits enter again, quit the application. Game over
-                    if (combatOverTextDisplayed)
-                    {
-                        //Destroy info for this game because player lost and return to title screen
-                        Destroy(gameInfo.gameObject);
-                        GameObject worldMapController = GameObject.Find("WorldMapController");
-                        Destroy(worldMapController);
-                        SceneManager.LoadScene("TitleScreen");
-                    }
-                    //Display Combat Over Text for when Player Loses Combat
-                    else
-                    {
-                        descriptionText.GetComponent<TextMeshProUGUI>().text = "You Died. Game Over!  <sprite index=0>";
-                        combatOverTextDisplayed = true;
+                        //If the Combat Over Text was Displayed and player hits enter again, quit the application. Game over
+                        if (combatOverTextDisplayed)
+                        {
+                            //Destroy info for this game because player lost and return to title screen
+                            Destroy(gameInfo.gameObject);
+                            GameObject worldMapController = GameObject.Find("WorldMapController");
+                            Destroy(worldMapController);
+                            SceneManager.LoadScene("TitleScreen");
+                        }
+                        //Display Combat Over Text for when Player Loses Combat
+                        else
+                        {
+                            StartCoroutine(EndBattleSequence(false));
+                            
+                            descriptionText.GetComponent<TextMeshProUGUI>().text = "You Died. Game Over!  <sprite index=0>";
+                            combatOverTextDisplayed = true;
+                        }
                     }
                 }
             }
@@ -234,12 +294,206 @@ public class CombatController : MonoBehaviour
         //Add enemy attack AI based on enemy you're fighting in CombatInfo
         gameInfo.playerInfo.health = gameInfo.playerInfo.health - 20 < 0 ? 0 : gameInfo.playerInfo.health - 20;
 
+        StartCoroutine(EnemyAttackFX(true));
+
         descriptionText.GetComponent<TextMeshProUGUI>().text = "Enemy Dealt " + 20 + " Damage!  <sprite index=0>";
         descriptionText.SetActive(true);
 
         descriptionText.GetComponent<Button>().Select();
 
         playerTurn = true;
+    }
+
+    private IEnumerator EndBattleSequence(bool playerWon)
+    {
+        playerActionsLocked = true;
+
+        Camera.main.GetComponent<AudioSource>().Stop();
+        if (playerWon)
+        {
+            audioSource.PlayOneShot(battleWon);
+        }
+        else
+        {
+            audioSource.PlayOneShot(battleLost);
+            audioSource.PlayOneShot(playerDeath);
+        }
+
+        yield return new WaitForSeconds(2.4f);
+
+        playerActionsLocked = false;
+    }
+
+    private IEnumerator EnemyAttackFX(bool attackHit)
+    {
+        playerActionsLocked = true;
+
+        audioSource.PlayOneShot(alienAttack,0.7f);
+        if (attackHit)
+        {
+            yield return new WaitForSeconds(1);
+            audioSource.PlayOneShot(alienHit,0.7f);
+            yield return new WaitForSeconds(0.6f);
+            audioSource.PlayOneShot(playerHit);
+            StartCoroutine(PlayerShake(0.15f, 25f));
+            audioSource.PlayOneShot(playerHurt,1.5f);
+        }
+        else
+        {
+            yield return new WaitForSeconds(1);
+            audioSource.PlayOneShot(missAttack);
+        }
+
+        //Wait for Shake/Audio to finish
+        yield return new WaitForSeconds(0.5f);
+
+        playerActionsLocked = false;
+    }
+
+    private IEnumerator PlayerAttackFX(bool attackHit, int attackNumber)
+    {
+        playerActionsLocked = true;
+
+        if (attackHit)
+        {
+            if(attackNumber == 0)
+            {
+                //Light Attack Hit
+                audioSource.PlayOneShot(playerHit,1.1f);
+            }
+            else if (attackNumber == 1)
+            {
+                //Heavy Attack is a louder version of the Light attack
+                audioSource.PlayOneShot(playerHit, 1.5f);
+            }
+            StartCoroutine(EnemyShake(0.15f, 25f));
+            yield return new WaitForSeconds(0.2f);
+            audioSource.PlayOneShot(alienHurt);
+        }
+        else
+        {
+            audioSource.PlayOneShot(missAttack);
+        }
+
+        //Wait for Shake/Audio to finish
+        yield return new WaitForSeconds(0.65f);
+
+        playerActionsLocked = false;
+    }
+
+    private IEnumerator PlayerSpecialFX(bool attackHit, int specialAttackNumber)
+    {
+        playerActionsLocked = true;
+
+        //Super Punch
+        if (specialAttackNumber == 0)
+        {
+            audioSource.PlayOneShot(superPunchSwing);
+            if (attackHit)
+            {
+                yield return new WaitForSeconds(0.6f);
+                audioSource.PlayOneShot(superPunchHit, 1.3f);
+                yield return new WaitForSeconds(0.15f);
+                audioSource.PlayOneShot(alienHurt);
+                StartCoroutine(EnemyShake(0.15f, 25f));
+                //Wait for Shake/Audio to finish
+                yield return new WaitForSeconds(1.2f);
+            }
+            else
+            {
+                yield return new WaitForSeconds(1);
+                audioSource.PlayOneShot(missAttack);
+            }
+        }
+        //Dragon's Breath
+        else if(specialAttackNumber == 1)
+        {
+            if(attackHit)
+            {
+                yield return new WaitForSeconds(0.1f);
+                audioSource.PlayOneShot(dragonsBreathHit);
+                yield return new WaitForSeconds(0.15f);
+                audioSource.PlayOneShot(alienHurt);
+                StartCoroutine(EnemyShake(0.15f, 25f));
+                //Wait for Shake/Audio to finish
+                yield return new WaitForSeconds(1.2f);
+            }
+            else
+            {
+                //TODO: Placeholder; Doesn't sound like a fireball missing
+                audioSource.PlayOneShot(missAttack);
+            }
+        }
+
+        playerActionsLocked = false;
+    }
+
+    private IEnumerator PlayerHealFX()
+    {
+        playerActionsLocked = true;
+
+        audioSource.PlayOneShot(healingSound, 1.25f);
+
+        //Wait for Audio to finish
+        yield return new WaitForSeconds(0.75f);
+
+        playerActionsLocked = false;
+    }
+
+    private IEnumerator PlayerRunAwayFX()
+    {
+        playerActionsLocked = true;
+
+        audioSource.PlayOneShot(runAwaySound, 1.5f);
+
+        //Wait for Audio to finish
+        yield return new WaitForSeconds(1.5f);
+
+        playerActionsLocked = false;
+    }
+
+    private IEnumerator PlayerShake(float duration, float magnitude)
+    {
+        Vector3 origPlayerPos = playerUI.transform.position;
+        Vector3 origBackgroundPos = backgroundImage.transform.position;
+        float elapsed = 0f;
+
+        float shakeAmount = magnitude;
+        float shareOffset = 0;
+        float lerp = 0;
+
+        while (elapsed < duration)
+        {
+            lerp = Mathf.PingPong(elapsed + duration/8, duration/4) / (duration/4);
+            shareOffset = Mathf.Lerp(-shakeAmount, shakeAmount, lerp);
+            playerUI.transform.position = new Vector3(shareOffset+origPlayerPos.x, origPlayerPos.y, 0);
+            backgroundImage.transform.position = new Vector3(shareOffset + origBackgroundPos.x, origBackgroundPos.y, 0);
+            elapsed += Time.deltaTime;
+            yield return 0;
+        }
+
+        playerUI.transform.position = origPlayerPos;
+        backgroundImage.transform.position = origBackgroundPos;
+    }
+
+    private IEnumerator EnemyShake(float duration, float magnitude)
+    {
+        Vector3 origPosition = enemyUI.transform.position;
+        float elapsed = 0f;
+
+        float shakeAmount = magnitude;
+        float shareOffset = 0;
+        float lerp = 0;
+
+        while (elapsed < duration)
+        {
+            lerp = Mathf.PingPong(elapsed + duration / 8, duration / 4) / (duration / 4);
+            shareOffset = Mathf.Lerp(-shakeAmount, shakeAmount, lerp);
+            enemyUI.transform.position = new Vector3(shareOffset + origPosition.x, origPosition.y, 0);
+            elapsed += Time.deltaTime;
+            yield return 0;
+        }
+        enemyUI.transform.position = origPosition;
     }
 
     public void SelectAttack()
@@ -274,6 +528,8 @@ public class CombatController : MonoBehaviour
             gameInfo.playerInfo.stamina = stamina - staminaUsed;
             gameInfo.combatInfo.enemyHealth = enemyHealth - damageDealt < 0 ? 0 : enemyHealth - damageDealt;
 
+            StartCoroutine(PlayerAttackFX(true, 0));
+
             descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + damageDealt + " Damage to the Enemy!  <sprite index=0>";
 
             playerTurn = false;
@@ -305,6 +561,8 @@ public class CombatController : MonoBehaviour
         {
             gameInfo.playerInfo.stamina = stamina - staminaUsed;
             gameInfo.combatInfo.enemyHealth = enemyHealth - damageDealt < 0 ? 0 : enemyHealth - damageDealt;
+
+            StartCoroutine(PlayerAttackFX(true, 1));
 
             descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + damageDealt + " Damage to the Enemy!  <sprite index=0>";
 
@@ -348,6 +606,8 @@ public class CombatController : MonoBehaviour
             gameInfo.playerInfo.stamina = stamina - staminaUsed;
             gameInfo.combatInfo.enemyHealth = enemyHealth - damageDealt < 0 ? 0 : enemyHealth - damageDealt;
 
+            StartCoroutine(PlayerSpecialFX(true, 0));
+
             descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + damageDealt + " Damage to the Enemy!  <sprite index=0>";
 
             playerTurn = false;
@@ -379,6 +639,8 @@ public class CombatController : MonoBehaviour
         {
             gameInfo.playerInfo.stamina = stamina - staminaUsed;
             gameInfo.combatInfo.enemyHealth = enemyHealth - damageDealt < 0 ? 0 : enemyHealth - damageDealt;
+
+            StartCoroutine(PlayerSpecialFX(true, 1));
 
             descriptionText.GetComponent<TextMeshProUGUI>().text = "You Dealt " + damageDealt + " Damage to the Enemy!  <sprite index=0>";
 
@@ -453,6 +715,10 @@ public class CombatController : MonoBehaviour
 
             healAndRunSelection.SetActive(false);
 
+            audioSource.PlayOneShot(healingSound,1.25f);
+
+            StartCoroutine(PlayerHealFX());
+
             descriptionText.GetComponent<TextMeshProUGUI>().text = "You Recovered " + healthRecovered + " Health!  <sprite index=0>";
             descriptionText.SetActive(true);
 
@@ -485,6 +751,8 @@ public class CombatController : MonoBehaviour
             if(randomEscape > 0.5f)
             {
                 healAndRunSelection.SetActive(false);
+
+                StartCoroutine(PlayerRunAwayFX());
 
                 descriptionText.GetComponent<TextMeshProUGUI>().text = "Got Away Safely!  <sprite index=0>";
                 descriptionText.SetActive(true);

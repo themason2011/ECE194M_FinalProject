@@ -8,17 +8,20 @@ public class PlayerMovement : MonoBehaviour
 {
     public Text playerHealthText;
 
+    public bool movementDisabled = false;
+
     private int visionDistance;
 
     private Grid map;
     private Tilemap moveableTilemap;
+    private Tilemap desertTilemap;
+    private Tilemap lightForestTilemap;
+    private Tilemap denseForestTilemap;
     private Tilemap goldenCity;
 
     private GameObject worldMapController;
-    private GameObject gameInfo;
+    private GameInfo gameInfo;
     private Tilemap fogOfWar;
-
-    private bool movementDisabled = false;
 
     private Vector3 destination;
 
@@ -27,16 +30,19 @@ public class PlayerMovement : MonoBehaviour
     {
         destination = transform.position;
         worldMapController = GameObject.Find("WorldMapController");
-        gameInfo = GameObject.Find("GameInfo");
+        gameInfo = GameObject.Find("GameInfo").GetComponent<GameInfo>();
         fogOfWar = GameObject.Find("Fog").GetComponent<Tilemap>();
         visionDistance = 2;
         UpdateFogOfWar();
         map = GameObject.Find("Grid").GetComponent<Grid>();
         moveableTilemap = GameObject.Find("Tilemap").GetComponent<Tilemap>();
+        desertTilemap = GameObject.Find("Desert").GetComponent<Tilemap>();
+        lightForestTilemap = GameObject.Find("LightForest").GetComponent<Tilemap>();
+        denseForestTilemap = GameObject.Find("DenseForest").GetComponent<Tilemap>();
         goldenCity = GameObject.Find("GoldenCity").GetComponent<Tilemap>();
 
         //Set position for player on load
-        transform.position = gameInfo.GetComponent<GameInfo>().worldMapPosition;
+        transform.position = gameInfo.worldMapPosition;
         Camera.main.transform.position = new Vector3(transform.position.x + 0.25f, transform.position.y + 0.5f, -10);
     }
 
@@ -58,10 +64,10 @@ public class PlayerMovement : MonoBehaviour
                 destination = map.GetCellCenterWorld(gridPosition);
                 transform.position = destination;
                 UpdateFogOfWar();
-                gameInfo.GetComponent<GameInfo>().worldMapPosition = transform.position;
+                gameInfo.worldMapPosition = transform.position;
 
-                int playerHealth = gameInfo.GetComponent<GameInfo>().playerInfo.health;
-                gameInfo.GetComponent<GameInfo>().playerInfo.health = playerHealth + 10 > 100 ? 100 : playerHealth + 10;
+                int playerHealth = gameInfo.playerInfo.health;
+                gameInfo.playerInfo.health = playerHealth + 10 > 100 ? 100 : playerHealth + 10;
 
                 if (goldenCity.HasTile(gridPosition))
                 {
@@ -72,6 +78,18 @@ public class PlayerMovement : MonoBehaviour
                 }
                 else
                 {
+                    if(desertTilemap.HasTile(gridPosition))
+                    {
+                        gameInfo.currentTileType = "Desert";
+                    }
+                    else if(lightForestTilemap.HasTile(gridPosition))
+                    {
+                        gameInfo.currentTileType = "LightForest";
+                    }
+                    else if (denseForestTilemap.HasTile(gridPosition))
+                    {
+                        gameInfo.currentTileType = "DenseForest";
+                    }
                     //Haven't found the Golden City yet, Roll to see if a Scenario occurs
                     worldMapController.GetComponent<WorldMapController>().RollScenario();
                 }
@@ -81,7 +99,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateUI()
     {
-        playerHealthText.text = gameInfo.GetComponent<GameInfo>().playerInfo.health.ToString();
+        playerHealthText.text = gameInfo.playerInfo.health.ToString();
     }
 
     private void UpdateCameraPosition()
